@@ -9,6 +9,19 @@
 #include <string.h>
 #include "tp_socket.h"
 
+//esse tp vai implementar a logica de janela deslizante - go back n
+//Neste protocolo, todos os quadros enviados, após um quadro com erro, serão descartados
+
+//O receptor simplesmente descarta todos
+//os quadros subseqüentes ao erro e não envia qualquer confirmação desses quadros descartados.
+
+//essa estratégia corresponde a uma janela de recepção de tamanho 1. Em outras palavras, a camada
+//de enlace de dados se recusa a aceitar qualquer quadro, exceto o próximo quadro que ela tem de entregar à camada de rede
+
+
+//Sua implementa-
+//ção deve lidar com perdas e erros de bits fazendo a retransmissão dos pacotes.
+
 int main(int argc, char *argv[]) {
 
     // Argumentos
@@ -28,6 +41,7 @@ int main(int argc, char *argv[]) {
     int n;
     unsigned short porta = atoi(porto_servidor);
     char* nome_arquivo = (char*) malloc(atoi(tam_buffer) * sizeof(char));
+    int tamanhoDaJanela=5;
 
     // Função de inicialização
     printf("Iniciando Servidor\n");
@@ -111,13 +125,17 @@ int main(int argc, char *argv[]) {
 
             do
             {
+                // envia valor de janelasDelizantes para o cliente
                 tp_sendto(server_fd, datagramaSend, atoi(tam_buffer), &local_addr);
                 n = tp_recvfrom(server_fd, datagramaRecv, atoi(tam_buffer), &local_addr);
 
                 if(n == -1 && errno == 11){
 					printf("Timeout. Enviando confirmação novamente. \n");
+					// se timeout ocorrer enviar TODOS os pacotes da janela que ainda nao foram "ack"
     				continue; // envia os dados novamente em caso de timeout
-				}                
+				}
+
+				//se
 
                 sscanf(datagramaRecv + 1, "%i", &recebidos);
 
@@ -127,9 +145,6 @@ int main(int argc, char *argv[]) {
                 }
                 else if(recebidos == enviados && datagramaRecv[0] == '0')
                     break;
-
-                //if(feof(fp) || datagramaRecv[0] == '0')
-                //    break;
 
             } while(true);
 
